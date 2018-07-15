@@ -7,6 +7,12 @@
 (define (text-of-quotation exp)
   (cdr exp))
 
+(define (true? exp)
+  (not (eq? exp #f)))
+
+(define (false? exp)
+  (eq? exp #f))
+
 ;; Syntax definitions.
 (define (tagged-list? exp tag)
   (if (pair? exp)
