@@ -189,7 +189,7 @@
 
 (define (eval-sequence exps env)
   (cond ((last-exp? exps)
-         (my-eval (first-exps exps) env))        
+         (my-eval (first-exp exps) env))        
         (else
          (my-eval (first-exp exps) env)
          (eval-sequence (rest-exps exps) env))))
@@ -200,7 +200,7 @@
          (lookup-variable-value exp env))
         ((quoted? exp)
          (text-of-quotation exp))
-        ((assigment? exp)
+        ((assignment? exp)
          (eval-assignment exp env))
         ((definition? exp)
          (eval-definition exp env))
