@@ -259,7 +259,7 @@
           (extend-environment
            (procedure-parameters procedure)
            arguments
-           (procedure-environment environment))))
+           (procedure-environment procedure))))
         (else (error ("Unknown procedure type: APPLY" procedure)))))
 
 
