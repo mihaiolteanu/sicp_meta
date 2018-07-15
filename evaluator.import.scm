@@ -213,6 +213,15 @@
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
 
+(define base-environment '((a . 9)))
+(define (define-variable variable definition env)
+  (append! env `((,variable . ,definition))))
+(define (lookup-variable-value exp env)
+  (cond ((assoc exp env) => (lambda (entry) (cdr entry)))
+        (else #f)))
+
+(define-variable 'x 10 base-environment)
+(lookup-variable-value 'x base-environment)
 
 (define (my-eval exp env)
   (cond ((self-evaluation? exp) exp)
