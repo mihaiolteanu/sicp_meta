@@ -194,6 +194,26 @@
          (my-eval (first-exp exps) env)
          (eval-sequence (rest-exps exps) env))))
 
+(define (primitive-procedure? procedure)
+  (true? (assoc procedure primitive-procedures)))
+(define primitive-procedures
+  `((+ . ,+)
+    (- . ,-)))
+(define (apply-primitive-procedure procedure arguments)
+  (cond ((assoc procedure primitive-procedures) =>
+         (lambda (entry)
+           (apply (cdr entry) arguments)))
+        (else (error "Unknown primitive procedure: APPLY-PRIMITIVE-PROCEDURE" procedure))))
+
+(define (compound-procedure? p)
+  (tagged-list? p 'procedure))
+(define (procedure-parameters p) (cadr p))
+(define (procedure-body p) (caddr p))
+(define (procedure-environment p) (cadddr p))
+(define (make-procedure parameters body env)
+  (list 'procedure parameters body env))
+
+
 (define (my-eval exp env)
   (cond ((self-evaluation? exp) exp)
         ((variable? exp)
@@ -221,8 +241,6 @@
           env))
         ((cond? exp)
          (eval (cond->if exp) env))
-
-
         ((application? exp)
          (my-apply (my-eval (operator exp))
                    (list-of-values
