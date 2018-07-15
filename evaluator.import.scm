@@ -192,42 +192,37 @@
   (cond ((self-evaluation? exp) exp)
         ((variable? exp)
          (lookup-variable-value exp env))
-        ((assoc (car exp) eval-rules) => (lambda (rule)
-                                           ((cdr rule) exp env)))
+        ((quoted? exp)
+         (text-of-quotation exp))
+        ((assigment? exp)
+         (eval-assignment exp env))
+        ((definition? exp)
+         (eval-definition exp env))
+        ((if? exp)
+         (eval-if exp env))
+        ((or? exp)
+         (eval-or exp env))
+        ((and? exp)
+         (eval-and exp env))
+        ((lambda? exp)
+         (make-procedure
+          (lambda-parameters exp)
+          (lambda-body exp)
+          env))
+        ((begin? exp)
+         (eval-sequence
+          (begin-actions exp)
+          env))
+        ((cond? exp)
+         (eval (cond->if exp) env))
+
+
         ((application? exp)
          (my-apply (my-eval (operator exp))
                    (list-of-values
                     (operands exp)
                     env)))
         (else (error "Unknown expression type: EVAL" exp))))
-
-(define eval-rules
-  `((quote  . ,(lambda (exp env) (text-of-quotation exp)))
-    (set!   . eval-assignment)
-    (define . eval-definition)
-    (if     . eval-if)
-    (or     . eval-or)
-    (and    . eval-and)
-    (lambda . ,(lambda (exp env)
-                (make-procedure
-                 (lambda-parameters exp)
-                 (lambda-body exp)
-                 body)))
-    (begin  . ,(lambda (exp env)
-                (eval-sequence
-                 (begin-actions exp)
-                 env)))
-    (cond   . ,(lambda (exp env)
-                (my-eval (cond->if exp) env)))))
-
-(define my-rules
-  `((plus . ,(lambda (x y) (+ x y)))
-    (minus . ,-)))
-
-(cond ((assoc 'plus my-rules) => (lambda (rule) ((cdr rule) 3 4)))
-(cond ((assoc 'minus my-rules) => (lambda (rule) ((cdr rule) 3 4)))
-      (else 10))
-
 
 (define (my-apply procedure arguments)
   (cond ((primitive-procedure? procedure)
@@ -242,5 +237,6 @@
            arguments
            (procedure-environment environment))))
         (else (error ("Unknown procedure type: APPLY" procedure)))))
+
 
 )
