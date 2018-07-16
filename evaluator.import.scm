@@ -213,15 +213,38 @@
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
 
-(define base-environment '((a . 9)))
-(define (define-variable variable definition env)
-  (append! env `((,variable . ,definition))))
-(define (lookup-variable-value exp env)
-  (cond ((assoc exp env) => (lambda (entry) (cdr entry)))
-        (else #f)))
+;; Destructively append list b at the end of list a
+(define (my-append! a b)
+  (if (null? (cdr a))
+      (set! (cdr a) b)
+      (my-append! (cdr a) b)))
 
-(define-variable 'x 10 base-environment)
-(lookup-variable-value 'x base-environment)
+;; Environments
+(define (empty-environment env)
+  (list env '(symbols)))
+(define (last-env? env)
+  (eq? (car env) 'base))
+(define (env-enclosing env) (car env))
+(define (env-symbols-list env) (cadr env))
+(define (env-symbols env) (cdr (env-symbols-list env)))
+
+(define (extend-environment parameters arguments env)
+  (let ((new-env (empty-environment env)))
+    (map (lambda (p a)
+         (define-variable p a new-env))
+         parameters arguments)
+    new-env))
+
+(define (define-variable variable definition env)
+  (my-append! (env-symbols-list env) `((,variable . ,definition))))
+
+(define (lookup-variable-value exp env)
+  (cond ((last-env? env) #f)
+        ((assoc exp (env-symbols env)) => (lambda (entry) (cdr entry)))
+        (else (lookup-variable-value
+               exp
+               (env-enclosing env)))))
+
 
 (define (my-eval exp env)
   (cond ((self-evaluation? exp) exp)
