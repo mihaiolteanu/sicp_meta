@@ -251,7 +251,7 @@
         ((cond? exp)
          (eval (cond->if exp) env))
         ((application? exp)
-         (my-apply (my-eval (operator exp))
+         (my-apply (my-eval (operator exp) env)
                    (list-of-values
                     (operands exp)
                     env)))
