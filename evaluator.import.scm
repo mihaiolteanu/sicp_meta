@@ -1,5 +1,8 @@
 ;; -*- geiser-scheme-implementation: 'chicken -*-
-;; https://wizardbook.wordpress.com/2010/12/26/exercise-4-4/
+;; On windows Geiser doesn't seem to work, so, from babun, run emacs and then
+;; (setq scheme-program-name "/usr/local/bin/csi")
+;; (define-key scheme-mode-map (kbd "C-x C-e") 'scheme-send-last-sexp)
+;; Disable geiser-mode
 
 (module evaluator (my-eval)
   (import chicken scheme)
