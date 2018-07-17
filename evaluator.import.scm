@@ -247,7 +247,11 @@
           (error "Too few arguments supplied" vars vals))))
 
 (define (lookup-in-frame var frame)
-  (cond ((null? frame) #f)
+  (cond ((or (null? frame)
+             ;; Hackish. first-frame returns the first variable binding
+             ;; when there are no more enclosing envs
+             (not (pair? (car frame))))
+         #f)
         ((eq? var (caar frame)) (cdar frame))
         (else (lookup-in-frame var (cdr frame)))))
 
