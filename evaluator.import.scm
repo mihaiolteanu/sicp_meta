@@ -4,9 +4,9 @@
 ;; (define-key scheme-mode-map (kbd "C-x C-e") 'scheme-send-last-sexp)
 ;; Disable geiser-mode
 
-(module evaluator (my-eval
-                   the-empty-environment)
-  (import chicken scheme)
+;; (module evaluator (my-eval
+;;                    the-empty-environment)
+;;   (import chicken scheme)
 
 (define (text-of-quotation exp)
   (cdr exp))
@@ -107,8 +107,7 @@
 (define (lambda? exp)
   (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
-(define (lambda-body exp) (cddr exp))
-
+(define (lambda-body exp) (caddr exp))
 
 (define (begin? exp)
   (tagged-list? exp 'begin))
@@ -299,8 +298,6 @@
 
 (define the-global-environment (setup-environment))
 
-(my-eval '(+ 1 2) (setup-environment))
-
 (define (my-eval exp env)
   (cond
    ((self-evaluation? exp) exp)
@@ -328,13 +325,13 @@
           (begin-actions exp)
           env))
         ((cond? exp)
-         (eval (cond->if exp) env))
+         (my-eval (cond->if exp) env))
         ((application? exp)
          (my-apply (my-eval (operator exp) env)
                    (list-of-values
                     (operands exp)
                     env)))
-        (else (error "Unknown expression type: EVAL" exp))))
+        (else (error "Unknown expression type: MY-EVAL" exp))))
 
 (define (my-apply procedure arguments)
   (cond ((primitive-procedure? procedure)
@@ -360,14 +357,14 @@
            (my-eval input the-global-environment)))
       (announce-output output-prompt)
       (user-print output)))
-  (driver-lopp))
+  (driver-loop))
 
 (define (prompt-for-input string)
   (newline) (newline)
-  (display string) (newline))
+  (display string))
 
 (define (announce-output string)
-  (newline) (display string) (newline))
+  (newline) (display string))
 
 (define (user-print object)
   (if (compound-procedure? object)
@@ -376,11 +373,13 @@
              (procedure-parameters object)
              (procedure-body object)
              '<procedure-env>))
-      (display object)))
+      (begin
+        (display object)
+        (newline))))
 
+(driver-loop)
 
-)
+;; )
 
-
-)
+(define (myf x y) (+ x y))
 
