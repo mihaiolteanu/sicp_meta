@@ -199,15 +199,14 @@
          (eval-sequence (rest-exps exps) env))))
 
 (define (primitive-procedure? procedure)
-  (true? (assoc procedure primitive-procedures)))
+  (tagged-list? procedure 'primitive))
 (define primitive-procedures
-  `((+ . ,+)
-    (- . ,-)))
+  `((+ . (primitive ,+))
+    (- . (primitive ,-))))
+(define (primitive-implementation procedure)
+  (cadr procedure))
 (define (apply-primitive-procedure procedure arguments)
-  (cond ((assoc procedure primitive-procedures) =>
-         (lambda (entry)
-           (apply (cdr entry) arguments)))
-        (else (error "Unknown primitive procedure: APPLY-PRIMITIVE-PROCEDURE" procedure))))
+  (apply (primitive-implementation procedure) arguments))
 
 (define (compound-procedure? p)
   (tagged-list? p 'procedure))
@@ -220,7 +219,15 @@
 (define (enclosing-environment env) (cdr env))
 (define (first-frame env) (car env))
 (define the-empty-environment '())
-(define base-environment (cons primitive-procedures the-empty-environment))
+(define base-environment
+  (extend-environment
+   (map (lambda (e)
+          (car e))
+        primitive-procedures)
+   (map (lambda (e)
+          (cdr e))
+        primitive-procedures)
+   the-empty-environment))
 (define (make-frame variables values)
   (let ((frame '()))
     (map (lambda (x y)
@@ -272,22 +279,23 @@
 (define (define-variable! var val env)
   (define-var! var val (first-frame env)))
 
+(define (setup-environment)
+  (let ((initial-env
+         (extend-environment
+          (map (lambda (e)
+                 (car e))
+               primitive-procedures)
+          (map (lambda (e)
+                 (cdr e))
+               primitive-procedures)
+          the-empty-environment)))
+    (define-var! '#t #t initial-env)
+    (define-var! '#f #f initial-env)
+    initial-env))
 
-(define e1 (extend-environment '(x y) '(10 11) the-empty-environment))
-(define e2 (extend-environment '(a b) '(1 2) e1))
+(define the-global-environment (setup-environment))
 
-;; (lookup-variable-value 'x e2)
-;; (set-variable-value! 'x 15 e1)
-;; (define f2 (first-frame e2))
-;; (set-cdr! (car f2) 3)
-;; (cdr f2)
-;; (lookup-variable-value 'm e1)
-;; (define-variable! 'm 123 e2)
-
-;; (define lst '(1 2))
-
-(my-eval '(+ 1 2) (extend-environment '(+ -) '(+ -) the-empty-environment))
-(my-eval '(+ 1 2) base-environment)
+(my-eval '(+ 1 2) (setup-environment))
 
 (define (my-eval exp env)
   (cond
@@ -329,14 +337,15 @@
          (apply-primitive-procedure
           procedure
           arguments))
-        ;; ((compound-procedure? procedure)
-        ;;  (eval-sequence
-        ;;   (procedure-body procedure)
-        ;;   (extend-environment
-        ;;    (procedure-parameters procedure)
-        ;;    arguments
-        ;;    (procedure-environment procedure))))
+        ((compound-procedure? procedure)
+         (eval-sequence
+          (procedure-body procedure)
+          (extend-environment
+           (procedure-parameters procedure)
+           arguments
+           (procedure-environment procedure))))
         (else (error ("Unknown procedure type: MY-APPLY" procedure)))))
 
 
 )
+
