@@ -4,7 +4,8 @@
 ;; (define-key scheme-mode-map (kbd "C-x C-e") 'scheme-send-last-sexp)
 ;; Disable geiser-mode
 
-(module evaluator (my-eval)
+(module evaluator (my-eval
+                   the-empty-environment)
   (import chicken scheme)
 
 (define (text-of-quotation exp)
@@ -216,41 +217,81 @@
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
 
-;; Destructively append list b at the end of list a
-(define (my-append! a b)
-  (if (null? (cdr a))
-      (set! (cdr a) b)
-      (my-append! (cdr a) b)))
+(define (enclosing-environment env) (cdr env))
+(define (first-frame env) (car env))
+(define the-empty-environment '())
+(define base-environment (cons primitive-procedures the-empty-environment))
+(define (make-frame variables values)
+  (let ((frame '()))
+    (map (lambda (x y)
+           (set! frame (cons (cons x y) frame)))
+         variables values)
+    frame))
+(define (add-binding-to-frame! var val frame)
+  (cond ((null? (cdr frame))
+         (set-cdr! frame (list (cons var val))))
+        (else (add-binding-to-frame! var val (cdr frame)))))
 
-;; Environments
-(define (empty-environment env)
-  (list env '(symbols)))
-(define (last-env? env)
-  (eq? (car env) 'base))
-(define (env-enclosing env) (car env))
-(define (env-symbols-list env) (cadr env))
-(define (env-symbols env) (cdr (env-symbols-list env)))
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error "Too many arguments supplied" vars vals)
+          (error "Too few arguments supplied" vars vals))))
 
-(define (extend-environment parameters arguments env)
-  (let ((new-env (empty-environment env)))
-    (map (lambda (p a)
-         (define-variable p a new-env))
-         parameters arguments)
-    new-env))
+(define (lookup-in-frame var frame)
+  (cond ((null? frame) #f)
+        ((eq? var (caar frame)) (cdar frame))
+        (else (lookup-in-frame var (cdr frame)))))
 
-(define (define-variable variable definition env)
-  (my-append! (env-symbols-list env) `((,variable . ,definition))))
+(define (lookup-variable-value var env)
+  (if (eq? env the-empty-environment)
+      (error "Unbound variable" var)
+      (let ((res (lookup-in-frame var (first-frame env))))
+        (if (not (false? res))
+            res
+            (lookup-variable-value var (enclosing-environment env))))))
 
-(define (lookup-variable-value exp env)
-  (cond ((last-env? env) #f)
-        ((assoc exp (env-symbols env)) => (lambda (entry) (cdr entry)))
-        (else (lookup-variable-value
-               exp
-               (env-enclosing env)))))
+(define (set-variable! var val frame)
+  (if (null? frame)
+      (error "Unbound variable: SET!" var)
+      (if (eq? var (caar frame))
+          (set-cdr! (car frame) val)
+          (set-variable! var val (cdr frame)))))
 
+(define (set-variable-value! var val env)
+  (set-variable! var val (first-frame env)))
+
+(define (define-var! var val frame)
+  (if (null? (cdr frame))               ;No definition found
+      (set-cdr! frame (list (cons var val)))
+      (if (eq? var (caar frame))        ;Redefine otherwise
+          (set-cdr! (car frame) val)
+          (define-var! var val (cdr frame)))))
+
+(define (define-variable! var val env)
+  (define-var! var val (first-frame env)))
+
+
+(define e1 (extend-environment '(x y) '(10 11) the-empty-environment))
+(define e2 (extend-environment '(a b) '(1 2) e1))
+
+;; (lookup-variable-value 'x e2)
+;; (set-variable-value! 'x 15 e1)
+;; (define f2 (first-frame e2))
+;; (set-cdr! (car f2) 3)
+;; (cdr f2)
+;; (lookup-variable-value 'm e1)
+;; (define-variable! 'm 123 e2)
+
+;; (define lst '(1 2))
+
+(my-eval '(+ 1 2) (extend-environment '(+ -) '(+ -) the-empty-environment))
+(my-eval '(+ 1 2) base-environment)
 
 (define (my-eval exp env)
-  (cond ((self-evaluation? exp) exp)
+  (cond
+   ((self-evaluation? exp) exp)
         ((variable? exp)
          (lookup-variable-value exp env))
         ((quoted? exp)
@@ -277,7 +318,7 @@
         ((cond? exp)
          (eval (cond->if exp) env))
         ((application? exp)
-         (my-apply (my-eval (operator exp))
+         (my-apply (my-eval (operator exp) env)
                    (list-of-values
                     (operands exp)
                     env)))
@@ -288,14 +329,14 @@
          (apply-primitive-procedure
           procedure
           arguments))
-        ((compound-procedure? procedure)
-         (eval-sequence
-          (procedure-body procedure)
-          (extend-environment
-           (procedure-parameters procedure)
-           arguments
-           (procedure-environment procedure))))
-        (else (error ("Unknown procedure type: APPLY" procedure)))))
+        ;; ((compound-procedure? procedure)
+        ;;  (eval-sequence
+        ;;   (procedure-body procedure)
+        ;;   (extend-environment
+        ;;    (procedure-parameters procedure)
+        ;;    arguments
+        ;;    (procedure-environment procedure))))
+        (else (error ("Unknown procedure type: MY-APPLY" procedure)))))
 
 
 )
