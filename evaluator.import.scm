@@ -218,6 +218,18 @@
 (define (enclosing-environment env) (cdr env))
 (define (first-frame env) (car env))
 (define the-empty-environment '())
+(define (make-frame variables values)
+  (let ((frame '()))
+    (map (lambda (x y)
+           (set! frame (cons (cons x y) frame)))
+         variables values)
+    frame))
+(define (extend-environment vars vals base-env)
+  (if (= (length vars) (length vals))
+      (cons (make-frame vars vals) base-env)
+      (if (< (length vars) (length vals))
+          (error "Too many arguments supplied" vars vals)
+          (error "Too few arguments supplied" vars vals))))
 (define base-environment
   (extend-environment
    (map (lambda (e)
@@ -227,23 +239,11 @@
           (cdr e))
         primitive-procedures)
    the-empty-environment))
-(define (make-frame variables values)
-  (let ((frame '()))
-    (map (lambda (x y)
-           (set! frame (cons (cons x y) frame)))
-         variables values)
-    frame))
+
 (define (add-binding-to-frame! var val frame)
   (cond ((null? (cdr frame))
          (set-cdr! frame (list (cons var val))))
         (else (add-binding-to-frame! var val (cdr frame)))))
-
-(define (extend-environment vars vals base-env)
-  (if (= (length vars) (length vals))
-      (cons (make-frame vars vals) base-env)
-      (if (< (length vars) (length vals))
-          (error "Too many arguments supplied" vars vals)
-          (error "Too few arguments supplied" vars vals))))
 
 (define (lookup-in-frame var frame)
   (cond ((or (null? frame)
@@ -348,7 +348,7 @@
         (else (error ("Unknown procedure type: MY-APPLY" procedure)))))
 
 (define input-prompt "> ")
-(define output-prompt "> ")
+(define output-prompt "")
 
 (define (driver-loop)
   (prompt-for-input input-prompt)
@@ -360,11 +360,10 @@
   (driver-loop))
 
 (define (prompt-for-input string)
-  (newline) (newline)
   (display string))
 
 (define (announce-output string)
-  (newline) (display string))
+  (display string))
 
 (define (user-print object)
   (if (compound-procedure? object)
