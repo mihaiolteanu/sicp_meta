@@ -4,9 +4,8 @@
 ;; (define-key scheme-mode-map (kbd "C-x C-e") 'scheme-send-last-sexp)
 ;; Disable geiser-mode
 
-;; (module evaluator (my-eval
-;;                    the-empty-environment)
-;;   (import chicken scheme)
+(module evaluator (interpreter)
+  (import chicken scheme)
 
 (define (text-of-quotation exp)
   (cdr exp))
@@ -376,9 +375,12 @@
         (display object)
         (newline))))
 
-(driver-loop)
+(define (interpreter exp)
+  (my-eval exp the-global-environment))
 
-;; )
+;; (driver-loop)
 
-(define (myf x y) (+ x y))
+)
+
+;; (define (myf x y) (+ x y))
 
