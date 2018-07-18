@@ -4,9 +4,6 @@
 ;; (define-key scheme-mode-map (kbd "C-x C-e") 'scheme-send-last-sexp)
 ;; Disable geiser-mode
 
-(module evaluator (interpreter)
-  (import chicken scheme)
-
 (define (text-of-quotation exp)
   (cdr exp))
 
@@ -398,7 +395,33 @@
 
 ;; (driver-loop)
 
-)
+(define (my-filter pred lst)
+  (cond ((null? lst) '())
+        ((pred (car lst))
+         (cons (car lst)
+               (my-filter pred (cdr lst))))
+        (else (my-filter pred (cdr lst)))))
 
-;; (define (myf x y) (+ x y))
+(define (test exps)
+  (my-filter (lambda (e)
+               (not (equal? e #t)))
+             (map (lambda (e)
+                    (if (equal? (cadr e) (eval (caddr e)))
+                        #t
+                        e))
+                  exps)))
+
+(define (display-test-results tests)
+  (display "Failed-tests: ")
+  (map (lambda (t)
+         (newline)
+         (display t))
+       tests)
+  (newline))
+
+(display-test-results
+ (test
+  '((equal? 3 (interpreter '(+ 1 20)))
+    (equal? 1 1)
+    (equal? 1 10))))
 
