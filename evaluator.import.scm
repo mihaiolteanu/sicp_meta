@@ -98,7 +98,7 @@
 (define (eval-and-body exp env)
   (if (and-null-clause? exp)
       #t
-      (let ((result (my-eval (and-first-clause exp))))
+      (let ((result (my-eval (and-first-clause exp) env)))
         (if (false? result)
             #f
             (eval-and-body (and-rest-clauses exp) env)))))
