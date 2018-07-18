@@ -305,8 +305,8 @@
                  (cdr e))
                primitive-procedures)
           the-empty-environment)))
-    (define-var! '#t #t initial-env)
-    (define-var! '#f #f initial-env)
+    (define-variable! '#t #t initial-env)
+    (define-variable! '#f #f initial-env)
     initial-env))
 
 (define the-global-environment (setup-environment))
