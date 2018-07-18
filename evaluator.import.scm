@@ -214,6 +214,10 @@
 (define primitive-procedures
   `((+ . (primitive ,+))
     (- . (primitive ,-))
+    (cons . (primitive ,cons))
+    (car . (primitive ,car))
+    (cdr . (primitive ,cdr))
+    (null? . (primitive ,null?))
     (map . (primitive ,variadic-map))))
 (define (primitive-implementation procedure)
   (cadr procedure))
