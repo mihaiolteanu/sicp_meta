@@ -425,17 +425,32 @@
 
 (define (run-tests)
   (display-test-results
-   (test
-    '(("simple addition"
+   (test '(
+      ("simple addition"
        21 (+ 1 20))
+      ("multiple evaluations"
+       10 (+ 1 (+ 2 (+ 4 5) (- 2 4))))
+      ("car"
+       1 (car '(1 2 3)))
+      ("cdr"
+       (2 3) (cdr '(1 2 3)))
+      ("cons"
+       (1 2 3) (cons 1 (cons 2 (cons 3 '()))))
+      ("null?"
+       #t (null? '()))
+      ("null? false"
+       #f (null? '(1 2 3)))
       ("define a variable"
        10 (begin
             (define x 10)
             x))
       ("define a function"
        10 (begin
-            (define (myf x y)
-              (+ x y))
+            (define (myf x y) (+ x y))
+            (myf 4 6)))
+      ("define a function with a lambda"
+       10 (begin
+            (define myf (lambda (x y) (+ x y)))
             (myf 4 6)))
       ("mapping"
        (1 3) (map car '((1 2) (3 4))))
