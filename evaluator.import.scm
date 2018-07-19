@@ -90,15 +90,16 @@
 (define (and-first-clause exp) (car exp))
 (define (and-rest-clauses exp) (cdr exp))
 (define (and-null-clause? exp) (null? exp))
+(define (and-last-clause? exp) (null? (cdr exp)))
 (define (eval-and exp env)
   (eval-and-body (and-body exp) env))
 (define (eval-and-body exp env)
-  (if (and-null-clause? exp)
-      #t
-      (let ((result (my-eval (and-first-clause exp) env)))
-        (if (false? result)
-            #f
-            (eval-and-body (and-rest-clauses exp) env)))))
+  (cond ((and-null-clause? exp) #t)
+        ((and-last-clause? exp) (my-eval (and-first-clause exp) env))
+        (else (let ((result (my-eval (and-first-clause exp) env)))
+                (if (false? result)
+                    #f
+                    (eval-and-body (and-rest-clauses exp) env))))))
 
 (define (lambda? exp)
   (tagged-list? exp 'lambda))
