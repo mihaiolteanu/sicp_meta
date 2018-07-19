@@ -160,6 +160,7 @@
 (define (self-evaluation? exp)
   (cond ((number? exp) #t)
         ((string? exp) #t)
+        ((boolean? exp) #t)
         (else #f)))
 
 (define (variable? exp) (symbol? exp))
@@ -307,8 +308,6 @@
                  (cdr e))
                primitive-procedures)
           the-empty-environment)))
-    (define-variable! '#t #t initial-env)
-    (define-variable! '#f #f initial-env)
     initial-env))
 
 (define the-global-environment (setup-environment))
