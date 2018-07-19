@@ -403,13 +403,16 @@
         (else (my-filter pred (cdr lst)))))
 
 (define (test exps)
-  (my-filter (lambda (e)
-               (not (equal? e #t)))
-             (map (lambda (e)
-                    (if (equal? (cadr e) (eval (caddr e)))
-                        #t
-                        e))
-                  exps)))
+  (my-filter
+   (lambda (e)
+     (not (equal? e #t)))
+   (map (lambda (e)
+          (let ((res (interpreter (caddr e))))
+            (if (equal? (cadr e) res)
+                #t
+                (list "evaled" (caddr e) "expecting" (cadr e) "but got" res)))
+          )
+        exps)))
 
 (define (display-test-results tests)
   (display "Failed-tests: ")
@@ -419,9 +422,24 @@
        tests)
   (newline))
 
-(display-test-results
- (test
-  '((equal? 3 (interpreter '(+ 1 20)))
-    (equal? 1 1)
-    (equal? 1 10))))
-
+(define (run-tests)
+  (display-test-results
+   (test
+    '(("simple addition"
+       21 (+ 1 20))
+      ("define a variable"
+       10 (begin
+            (define x 10)
+            x))
+      ("define a function"
+       10 (begin
+            (define (myf x y)
+              (+ x y))
+            (myf 4 6)))
+      ("mapping"
+       (1 3) (map car '((1 2) (3 4))))
+      ("mapping"
+       (2 3 4) (map (lambda (e)
+                      (+ e 1))
+                    '(1 2 3)))
+      ))))
