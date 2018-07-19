@@ -395,8 +395,6 @@
 (define (interpreter exp)
   (my-eval exp the-global-environment))
 
-;; (driver-loop)
-
 (define (my-filter pred lst)
   (cond ((null? lst) '())
         ((pred (car lst))
@@ -452,10 +450,10 @@
                (list x y)))
       ("and - eval until first false expression"
        (5 20) (begin
-               (define x 10)
-               (define y 20)
-               (and (set! x 5) #f (set! y 6))
-               (list x y)))
+                (define x 10)
+                (define y 20)
+                (and (set! x 5) #f (set! y 6))
+                (list x y)))
       ("and - return last expression if all are true"
        3 (and 1 2 3))
       ("and empty"
@@ -470,10 +468,10 @@
        #f (or #f #f #f))
       ("or - eval "
        (5 20) (begin
-            (define x 10)
-            (define y 20)
-            (or #f (set! x 5) (set! y 6))
-            (list x y)))
+                (define x 10)
+                (define y 20)
+                (or #f (set! x 5) (set! y 6))
+                (list x y)))
 
       ("define a variable"
        10 (begin
@@ -504,3 +502,6 @@
                       (+ e 1))
                     '(1 2 3)))
       ))))
+
+(run-tests)
+;; (driver-loop)
