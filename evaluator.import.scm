@@ -216,6 +216,7 @@
     (cons . (primitive ,cons))
     (car . (primitive ,car))
     (cdr . (primitive ,cdr))
+    (list . (primitive ,list))
     (null? . (primitive ,null?))
     (map . (primitive ,variadic-map))))
 (define (primitive-implementation procedure)
@@ -440,6 +441,18 @@
        #t (null? '()))
       ("null? false"
        #f (null? '(1 2 3)))
+      ("and - eval all expressions"
+       (5 6) (begin
+               (define x 10)
+               (define y 20)
+               (and (set! x 5) (set! y 6))
+               (list x y)))
+      ("and - return last expression if all are true"
+       3 (and 1 2 3))
+      ("and empty"
+       #t (and))
+      ("and false"
+       #f (and 3 #f 4))
       ("define a variable"
        10 (begin
             (define x 10)
