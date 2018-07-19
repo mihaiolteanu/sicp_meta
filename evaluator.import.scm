@@ -40,7 +40,7 @@
   (if (symbol? (cadr exp))
       (caddr exp)
       (make-lambda (cdadr exp)
-                   (cddr exp))))
+                   (caddr exp))))
 (define (eval-definition exp env)
   (define-variable!
     (definition-variable exp)
@@ -103,7 +103,7 @@
 (define (lambda? exp)
   (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
-(define (lambda-body exp) (caddr exp))
+(define (lambda-body exp) (cddr exp))
 
 (define (begin? exp)
   (tagged-list? exp 'begin))
