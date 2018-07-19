@@ -445,6 +445,16 @@
        10 (begin
             (define x 10)
             x))
+      ("redefinition"
+       10 (begin
+            (define x 5)
+            (define x 10)
+            x))
+      ("set!"
+       10 (begin
+            (define x 5)
+            (set! x 10)
+            x))
       ("define a function"
        10 (begin
             (define (myf x y) (+ x y))
