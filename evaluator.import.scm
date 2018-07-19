@@ -409,6 +409,8 @@
    (lambda (e)
      (not (equal? e #t)))
    (map (lambda (e)
+           ;Cleanup before the next test
+          (set! the-global-environment (setup-environment))
           (let ((res (interpreter (caddr e))))
             (if (equal? (cadr e) res)
                 #t
