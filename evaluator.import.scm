@@ -462,6 +462,19 @@
        #t (and))
       ("and false"
        #f (and 3 #f 4))
+
+      ;; Or tests
+      ("or empty"
+       #f (or))
+      ("or false"
+       #f (or #f #f #f))
+      ("or - eval "
+       (5 20) (begin
+            (define x 10)
+            (define y 20)
+            (or #f (set! x 5) (set! y 6))
+            (list x y)))
+
       ("define a variable"
        10 (begin
             (define x 10)
