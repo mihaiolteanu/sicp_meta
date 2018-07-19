@@ -414,8 +414,7 @@
           (let ((res (interpreter (caddr e))))
             (if (equal? (cadr e) res)
                 #t
-                (list "evaled" (caddr e) "expecting" (cadr e) "but got" res)))
-          )
+                (list "evaled" (caddr e) "expecting" (cadr e) "but got" res))))
         exps)))
 
 (define (display-test-results tests)
@@ -450,6 +449,12 @@
                (define x 10)
                (define y 20)
                (and (set! x 5) (set! y 6))
+               (list x y)))
+      ("and - eval until first false expression"
+       (5 20) (begin
+               (define x 10)
+               (define y 20)
+               (and (set! x 5) #f (set! y 6))
                (list x y)))
       ("and - return last expression if all are true"
        3 (and 1 2 3))
