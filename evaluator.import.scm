@@ -126,6 +126,10 @@
 (define (cond-clauses exp) (cdr exp))
 (define (cond-else-clause? clause)
   (eq? (cond-predicate clause) 'else))
+(define (cond-lambda-syntax? clause)
+  (eq? '=> (car (cond-actions clause))))
+(define (cond-apply-lambda-syntax predicate action)
+  (list action predicate))
 (define (cond-predicate clause) 
   (car clause))
 (define (cond-actions clause) 
@@ -145,8 +149,12 @@
                         last: COND->IF"
                        clauses))
             (make-if (cond-predicate first)
-                     (sequence->exp 
-                      (cond-actions first))
+                     (if (cond-lambda-syntax? first)
+                         (cond-apply-lambda-syntax
+                          (cond-predicate first)
+                          (cadr (cond-actions first)))
+                         (sequence->exp 
+                          (cond-actions first)))
                      (expand-clauses 
                       rest))))))
 
@@ -467,8 +475,9 @@
                   (+ x y))
                  (else 1))))
       
-      
-      ;; ("cond => expression"
+      ("cond => expression"
+       8 (cond (5 => (lambda (e) (+ e 3)))
+                (else 2)))
       
       ;; And tests
       ("and - eval all expressions"
