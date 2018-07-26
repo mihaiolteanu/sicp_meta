@@ -213,6 +213,9 @@
 (define primitive-procedures
   `((+ . (primitive ,+))
     (- . (primitive ,-))
+    (< . (primitive ,<))
+    (> . (primitive ,>))
+    (= . (primitive ,=))
     (cons . (primitive ,cons))
     (car . (primitive ,car))
     (cdr . (primitive ,cdr))
@@ -440,6 +443,32 @@
        #t (null? '()))
       ("null? false"
        #f (null? '(1 2 3)))
+
+      ;; Cond clauses
+      ("cond - basic return before else"
+       2 (begin
+            (define x 7)
+            (cond ((> x 10) 1)
+                  ((> x 5) 2)
+                  (else 3))))
+      
+      ("cond - basic, return from else"
+       3 (begin
+            (define x 2)
+            (cond ((> x 10) 1)
+                  ((> x 5) 2)
+                  (else 3))))
+
+      ("cond - eval all the actions"
+       15 (begin
+           (define x 5)
+           (cond ((> x 1)
+                  (define y 10)
+                  (+ x y))
+                 (else 1))))
+      
+      
+      ;; ("cond => expression"
       
       ;; And tests
       ("and - eval all expressions"
