@@ -108,14 +108,24 @@
 (define (let-bindings exp) (cadr exp))
 (define (let-body exp) (caddr exp))
 (define (let->combination exp)
-  (let* ((bindings (let-bindings exp))
-         (params (map car bindings))
-         (args (map cadr bindings))
-         (body (let-body exp)))
-    (cons (list 'lambda
-                params
-                body)
-          args)))
+  (if (symbol? (cadr exp))
+      ;; Named let
+      (make-begin
+       (list (list 'define
+                   (cons (cadr exp)
+                         (map car (caddr exp)))
+                   (cadddr exp))
+             (cons (cadr exp)
+                   (map cadr (caddr exp)))))
+      ;; Normal let
+      (let* ((bindings (let-bindings exp))
+             (params (map car bindings))
+             (args (map cadr bindings))
+             (body (let-body exp)))
+        (cons (list 'lambda
+                    params
+                    body)
+              args))))
 (define (bindings->let bindings body)
   (if (null? bindings)
       body
@@ -519,6 +529,13 @@
        11 (let* ((x 5)
                  (y (+ x 1)))
             (+ x y)))
+      ("named let"
+       (1 2 3 5) (let myf ((lst '(1 2 3))
+                           (final 5))
+                   (if (null? lst)
+                       (list final)
+                       (cons (car lst)
+                             (myf (cdr lst) final)))))
       
       ;; And tests
       ("and - eval all expressions"
