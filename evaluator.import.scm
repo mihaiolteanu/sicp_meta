@@ -103,6 +103,8 @@
 
 (define (let? exp)
   (tagged-list? exp 'let))
+(define (let*? exp)
+  (tagged-list? exp 'let*))
 (define (let->combination exp)
   (let* ((let-bindings (cadr exp))
          (params (map car let-bindings))
@@ -112,6 +114,19 @@
                 params
                 let-body)
           args)))
+(define (let-bindings exp)
+  (cadr exp))
+(define (let-body exp)
+  (caddr exp))
+(define (bindings->let bindings body)
+  (if (null? bindings)
+      body
+      (cons 'let
+            (cons (list (car bindings))
+                  (list (bindings->let (cdr bindings) body))))))
+(define (let*->nested-lets exp)
+  (bindings->let (let-bindings exp)
+                 (let-body exp)))
 
 (define (lambda? exp)
   (tagged-list? exp 'lambda))
@@ -356,6 +371,9 @@
    ((let? exp)
     (my-eval (let->combination exp)
              env))
+   ((let*? exp)
+    (my-eval (let*->nested-lets exp)
+             env))
    ((lambda? exp)
     (make-procedure
      (lambda-parameters exp)
@@ -498,6 +516,10 @@
       ("let - basic"
        10 (let ((x 4)
                 (y 6))
+            (+ x y)))
+      ("let* - basic"
+       11 (let* ((x 5)
+                 (y (+ x 1)))
             (+ x y)))
       
       ;; And tests
