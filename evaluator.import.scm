@@ -101,6 +101,18 @@
                     #f
                     (eval-and-body (and-rest-clauses exp) env))))))
 
+(define (let? exp)
+  (tagged-list? exp 'let))
+(define (let->combination exp)
+  (let* ((let-bindings (cadr exp))
+         (params (map car let-bindings))
+         (args (map cadr let-bindings))
+         (let-body (caddr exp)))
+    (cons (list 'lambda
+                params
+                let-body)
+          args)))
+
 (define (lambda? exp)
   (tagged-list? exp 'lambda))
 (define (lambda-parameters exp) (cadr exp))
@@ -341,6 +353,9 @@
     (eval-or exp env))
    ((and? exp)
     (eval-and exp env))
+   ((let? exp)
+    (my-eval (let->combination exp)
+             env))
    ((lambda? exp)
     (make-procedure
      (lambda-parameters exp)
@@ -478,6 +493,12 @@
       ("cond => expression"
        8 (cond (5 => (lambda (e) (+ e 3)))
                 (else 2)))
+
+      ;; Let
+      ("let - basic"
+       10 (let ((x 4)
+                (y 6))
+            (+ x y)))
       
       ;; And tests
       ("and - eval all expressions"
