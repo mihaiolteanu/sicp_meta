@@ -101,6 +101,16 @@
                     #f
                     (eval-and-body (and-rest-clauses exp) env))))))
 
+(define (unless? exp)
+  (tagged-list? exp 'unless))
+(define (unless-predicate exp)   (cadr exp))
+(define (unless-consequent exp)  (caddr exp))
+(define (unless-alternative exp) (cadddr exp))
+(define (unless->if exp)
+  (make-if (unless-predicate exp)
+           (unless-alternative exp)
+           (unless-consequent exp)))
+
 (define (let? exp)
   (tagged-list? exp 'let))
 (define (let*? exp)
@@ -378,6 +388,9 @@
     (eval-or exp env))
    ((and? exp)
     (eval-and exp env))
+   ((unless? exp)
+    (my-eval (unless->if exp)
+             env))
    ((let? exp)
     (my-eval (let->combination exp)
              env))
@@ -570,6 +583,23 @@
                 (define y 20)
                 (or #f (set! x 5) (set! y 6))
                 (list x y)))
+
+      ;; Unless
+      ("unless consequent"
+       2 (begin
+           (define a 10)
+           (define b 5)
+           (unless (= b 0)
+             (/ a b)
+             0)))
+
+      ("unless alternative"
+       0 (begin
+           (define a 10)
+           (define b 0)
+           (unless (= b 0)
+             (/ a b)
+             0)))
 
       ("define a variable"
        10 (begin
