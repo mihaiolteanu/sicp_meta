@@ -256,6 +256,8 @@
 (define primitive-procedures
   `((+ . (primitive ,+))
     (- . (primitive ,-))
+    (* . (primitive ,*))
+    (/ . (primitive ,/))
     (< . (primitive ,<))
     (> . (primitive ,>))
     (= . (primitive ,=))
