@@ -119,9 +119,7 @@
              (params (map car bindings))
              (args (map cadr bindings))
              (body (let-body exp)))
-        (cons (list 'lambda
-                    params
-                    body)
+        (cons (make-lambda params body)
               args))))
 (define (bindings->let bindings body)
   (if (null? bindings)
