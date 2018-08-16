@@ -75,17 +75,12 @@
        10 (let ((x 4)
                 (y 6))
             (+ x y)))
-      ("let* - basic"
-       11 (let* ((x 5)
-                 (y (+ x 1)))
-            (+ x y)))
-      ("named let"
-       (1 2 3 5) (let myf ((lst '(1 2 3))
-                           (final 5))
-                   (if (null? lst)
-                       (list final)
-                       (cons (car lst)
-                             (myf (cdr lst) final)))))
+      ("let - with closure"
+       15 (begin
+             (define x 10)
+             (let ((a 2)
+                   (b 3))
+               (+ a b x))))
       
       ;; And tests
       ("and - eval all expressions"
