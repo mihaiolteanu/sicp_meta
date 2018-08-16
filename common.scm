@@ -1,3 +1,9 @@
+;; -*- geiser-scheme-implementation: 'chicken -*-
+;; On windows Geiser doesn't seem to work, so, from babun, run emacs and then
+;; (setq scheme-program-name "/usr/local/bin/csi")
+;; (define-key scheme-mode-map (kbd "C-x C-e") 'scheme-send-last-sexp)
+;; Disable geiser-mode
+
 (define (text-of-quotation exp)
   (cdr exp))
 

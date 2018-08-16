@@ -93,7 +93,8 @@
     (lambda (env)
       (execute-application 
        (fproc env)
-       (map (lambda (aproc) (aproc env))
+       (map (lambda (aproc)
+              (aproc env))
             aprocs)))))
 
 (define (execute-application proc args)
