@@ -21,9 +21,6 @@
     env)
   'ok)
 
-(define (make-lambda params body)
-  `(lambda ,params ,body))
-
 (define (eval-if exp env)
   (if (true? (my-eval (if-predicate exp) env))
       (my-eval (if-consequent exp) env)

@@ -176,6 +176,8 @@
 (define (procedure-environment p) (cadddr p))
 (define (make-procedure parameters body env)
   (list 'procedure parameters body env))
+(define (make-lambda params body)
+  `(lambda ,params ,body))
 
 (define (enclosing-environment env) (cdr env))
 (define (first-frame env) (car env))
