@@ -83,38 +83,6 @@
   (bindings->let (let-bindings exp)
                  (let-body exp)))
 
-(define (cond-lambda-syntax? clause)
-  (eq? '=> (car (cond-actions clause))))
-(define (cond-apply-lambda-syntax predicate action)
-  (list action predicate))
-(define (cond-predicate clause) 
-  (car clause))
-(define (cond-actions clause) 
-  (cdr clause))
-(define (cond->if exp)
-  (expand-clauses (cond-clauses exp)))
-(define (expand-clauses clauses)
-  (if (null? clauses)
-      'false     ; no else clause
-      (let ((first (car clauses))
-            (rest (cdr clauses)))
-        (if (cond-else-clause? first)
-            (if (null? rest)
-                (sequence->exp 
-                 (cond-actions first))
-                (error "ELSE clause isn't 
-                        last: COND->IF"
-                       clauses))
-            (make-if (cond-predicate first)
-                     (if (cond-lambda-syntax? first)
-                         (cond-apply-lambda-syntax
-                          (cond-predicate first)
-                          (cadr (cond-actions first)))
-                         (sequence->exp 
-                          (cond-actions first)))
-                     (expand-clauses 
-                      rest))))))
-
 (define (list-of-values exps env)
   (if (no-operands? exps)
       '()
