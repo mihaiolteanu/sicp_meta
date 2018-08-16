@@ -1,92 +1,9 @@
-(define (tagged-list? exp tag)
-  (if (pair? exp)
-      (eq? (car exp) tag)
-      #f))
+(load "common.scm")
 
-(define (if? exp)
-  (tagged-list? exp 'if))
-(define (if-predicate exp) (cadr exp))
-(define (if-consequent exp) (caddr exp))
-(define (if-alternative exp)
-  (if (not (null? (cdddr exp)))
-      (cadddr exp)
-      'false))
-
-(define (definition? exp)
-  (tagged-list? exp 'define))
-(define (definition-variable exp)
-  (if (symbol? (cadr exp))
-        (cadr exp)
-        (caadr exp)))
-(define (definition-value exp)
-  (if (symbol? (cadr exp))
-      (caddr exp)
-      (make-lambda (cdadr exp)
-                   (caddr exp))))
-(define (eval-definition exp env)
-  (define-variable!
-    (definition-variable exp)
-    (analyze-sequence (definition-value exp)))
-  'ok)
-
-(define (lambda? exp)
-  (tagged-list? exp 'lambda))
-(define (lambda-parameters exp) (cadr exp))
-(define (lambda-body exp) (cddr exp))
-(define (make-lambda params body)
-  (list 'lambda
-        params
-        (analyze-sequence body)))
-
-(define (analyze-self-evaluating exp)
-  (lambda (env)
-    exp))
-
-(define (analyze-quoted exp)
-  (let ((quote-body (cdr exp)))
-    (lambda (env)
-      quote-body)))
-
-(define (analyze-variable exp)
-  (lambda (env)
-    (lookup-variable-value exp env)))
-
-(define (analyze-if exp)
-  (let ((predicate   (analyze (if-predicate exp)))
-        (consequent  (analyze (if-consequent exp)))
-        (alternative (analyze (if-alternative exp))))
-    (lambda (env)
-      (if (myeval predicate env)
-          (myeval consequent env)
-          (myeval alternative env)))))
-
-(define (application-operator exp) (car exp))
-(define (application-body))
-(define (analyze-application exp)
-  (let ((op (application-operator exp)))
-    (lambda (env)
-      (let ((proc (lookup-variable-value exp env))
-            (body ()))
-        
-        )))
-  )
-
-(define (my-foldr f init lst)
-  (if (null? lst)
-      init
-      (f (car lst)
-         (my-foldr f init (cdr lst)))))
-
-(my-foldr cons '(4 5) '(1 2 3))
-
-(define (analyze-sequence exps)
-  (map analyze exps))
-
-(define (myeval exp env)
-  ((analyze exp) env))
+(define (my-eval exp env) ((analyze exp) env))
 
 (define (analyze exp)
-  (cond ((self-evaluating? exp)
+  (cond ((self-evaluation? exp)
          (analyze-self-evaluating exp))
         ((quoted? exp) 
          (analyze-quoted exp))
@@ -112,13 +29,89 @@
                  type: ANALYZE" 
                 exp))))
 
-(let ((myf (lambda (n)
-             (if (= n 1)
-                 1
-                 (* n (myf (- n 1)))))))
-  (myf 5))
+(define (analyze-self-evaluating exp)
+  (lambda (env) exp))
 
+(define (analyze-quoted exp)
+  (let ((qval (text-of-quotation exp)))
+    (lambda (env) qval)))
 
+(define (analyze-variable exp)
+  (lambda (env) 
+    (lookup-variable-value exp env)))
 
-((lambda (lst)
-  lst) '(1 2 3))
+(define (analyze-assignment exp)
+  (let ((var (assignment-variable exp))
+        (vproc (analyze 
+                (assignment-value exp))))
+    (lambda (env)
+      (set-variable-value! 
+       var (vproc env) env)
+      'ok)))
+
+(define (analyze-definition exp)
+  (let ((var (definition-variable exp))
+        (vproc (analyze 
+                (definition-value exp))))
+    (lambda (env)
+      (define-variable! var (vproc env) env)
+      'ok)))
+
+(define (analyze-if exp)
+  (let ((pproc (analyze (if-predicate exp)))
+        (cproc (analyze (if-consequent exp)))
+        (aproc (analyze (if-alternative exp))))
+    (lambda (env)
+      (if (true? (pproc env))
+          (cproc env)
+          (aproc env)))))
+
+(define (analyze-lambda exp)
+  (let ((vars (lambda-parameters exp))
+        (bproc (analyze-sequence 
+                (lambda-body exp))))
+    (lambda (env) 
+      (make-procedure vars bproc env))))
+
+(define (analyze-sequence exps)
+  (define (sequentially proc1 proc2)
+    (lambda (env) (proc1 env) (proc2 env)))
+  (define (loop first-proc rest-procs)
+    (if (null? rest-procs)
+        first-proc
+        (loop (sequentially first-proc 
+                            (car rest-procs))
+              (cdr rest-procs))))
+  (let ((procs (map analyze exps)))
+    (if (null? procs)
+        (error "Empty sequence: ANALYZE"))
+    (loop (car procs) (cdr procs))))
+
+(define (analyze-application exp)
+  (let ((fproc (analyze (operator exp)))
+        (aprocs (map analyze (operands exp))))
+    (lambda (env)
+      (execute-application 
+       (fproc env)
+       (map (lambda (aproc) (aproc env))
+            aprocs)))))
+
+(define (execute-application proc args)
+  (cond ((primitive-procedure? proc)
+         (apply-primitive-procedure proc args))
+        ((compound-procedure? proc)
+         ((procedure-body proc)
+          (extend-environment 
+           (procedure-parameters proc)
+           args
+           (procedure-environment proc))))
+        (else (error "Unknown procedure type: 
+                      EXECUTE-APPLICATION"
+                     proc))))
+
+(define (my-filter pred lst)
+  (cond ((null? lst) '())
+        ((pred (car lst))
+         (cons (car lst)
+               (my-filter pred (cdr lst))))
+        (else (my-filter pred (cdr lst)))))
