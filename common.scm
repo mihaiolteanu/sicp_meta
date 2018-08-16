@@ -132,6 +132,33 @@
                      (expand-clauses 
                       rest))))))
 
+(define (let->combination exp)
+  (if (symbol? (cadr exp))
+      ;; Named let
+      (make-begin
+       (list (list 'define
+                   (cons (cadr exp)
+                         (map car (caddr exp)))
+                   (cadddr exp))
+             (cons (cadr exp)
+                   (map cadr (caddr exp)))))
+      ;; Normal let
+      (let* ((bindings (let-bindings exp))
+             (params (map car bindings))
+             (args (map cadr bindings))
+             (body (let-body exp)))
+        (cons (make-lambda params body)
+              args))))
+
+(define (bindings->let bindings body)
+  (if (null? bindings)
+      body
+      (cons 'let
+            (cons (list (car bindings))
+                  (list (bindings->let (cdr bindings) body))))))
+(define (let*->nested-lets exp)
+  (bindings->let (let-bindings exp)
+                 (let-body exp)))
 
 (define (application? exp) (pair? exp))
 (define (operator exp) (car exp))
